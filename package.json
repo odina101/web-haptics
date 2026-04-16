@@ -1,0 +1,34 @@
+{
+  "name": "web-haptics",
+  "version": "1.0.0",
+  "description": "Real haptic feedback for mobile web — iOS Taptic Engine + Android vibrate + sub-bass audio",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./svelte": {
+      "types": "./dist/svelte.d.ts",
+      "import": "./dist/svelte.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["haptics", "vibration", "taptic", "ios", "android", "mobile", "web", "feedback"],
+  "author": "Irakli",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/odina101/web-haptics"
+  }
+}
