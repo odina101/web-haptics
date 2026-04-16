@@ -1,54 +1,105 @@
 # web-haptics
 
-Real haptic feedback for mobile web. Three layers working together:
+Real haptic feedback for mobile web. Works on iOS and Android.
 
-1. **iOS Taptic Engine** — hidden `<input type="checkbox" switch>` toggling (multiple rapid toggles for heavier styles)
-2. **Android vibrate** — `navigator.vibrate()` with per-style patterns
-3. **Sub-bass audio** — low-frequency oscillator pulses that physically vibrate the device through the speaker
+## How it works
+
+- **iOS** — Toggles a hidden `<input type="checkbox" switch>` which fires the Safari Taptic Engine
+- **Android** — `navigator.vibrate()` with per-style patterns
+- **Audio** — Short click sound for extra tactile feel
 
 ## Install
 
 ```bash
-npm install web-haptics
+npm install @rowixorg/web-haptics
 ```
 
-## Usage
+## Quick start
 
-### Vanilla JS / any framework
+### With a bundler (Vite, SvelteKit, Next.js, etc.)
 
 ```js
-import { haptic } from 'web-haptics';
+import { haptic } from '@rowixorg/web-haptics';
 
-button.addEventListener('click', () => {
+document.querySelector('button').addEventListener('click', () => {
   haptic.trigger('medium');
 });
+```
+
+### Without a bundler (plain HTML)
+
+Copy this into your `<script>` tag:
+
+```html
+<button onclick="haptic('medium')">Tap me</button>
+
+<script>
+  const HapticEngine = (() => {
+    let label = null, init = false, audioCtx = null, filter = null, gain = null, buf = null;
+    const id = 'wh-' + Math.random().toString(36).slice(2, 8);
+    const vib = !!navigator.vibrate;
+    function dom() {
+      if (init) return;
+      const l = document.createElement('label'); l.setAttribute('for', id); l.style.display = 'none';
+      const i = document.createElement('input'); i.type = 'checkbox'; i.setAttribute('switch', ''); i.id = id;
+      i.style.all = 'initial'; i.style.appearance = 'auto'; i.style.display = 'none';
+      l.appendChild(i); document.body.appendChild(l); label = l; init = true;
+    }
+    function audio() {
+      if (audioCtx) return;
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.connect(audioCtx.destination);
+        gain = audioCtx.createGain(); gain.connect(filter);
+        buf = audioCtx.createBuffer(1, 64, audioCtx.sampleRate);
+      } catch(e) {}
+    }
+    function click(v) {
+      if (!audioCtx || !buf) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / 25);
+      gain.gain.value = 0.5 * v;
+      filter.frequency.value = (2000 + v * 2000) * (1 + (Math.random() - 0.5) * 0.3);
+      const s = audioCtx.createBufferSource(); s.buffer = buf; s.connect(gain); s.onended = () => s.disconnect(); s.start();
+    }
+    return { trigger(style) {
+      const p = { key: {i:.3,v:[8]}, light: {i:.6,v:[30]}, medium: {i:.85,v:[50]}, heavy: {i:1,v:[60,15,60]} }[style] || {i:.6,v:[30]};
+      if (vib) navigator.vibrate(p.v);
+      if (!vib) { dom(); if (label) label.click(); }
+      audio(); click(p.i);
+    }};
+  })();
+
+  function haptic(s) { HapticEngine.trigger(s); }
+</script>
 ```
 
 ### Svelte
 
 ```svelte
 <script>
-  import { useHaptic, useHapticInput } from 'web-haptics/svelte';
+  import { useHaptic, useHapticInput } from '@rowixorg/web-haptics/svelte';
 </script>
 
-<button use:useHaptic={'heavy'}>Delete</button>
+<button use:useHaptic={'medium'}>Tap me</button>
 <input use:useHapticInput placeholder="Type here" />
 ```
 
 ## Styles
 
-| Style    | Feel                          |
-|----------|-------------------------------|
-| `key`    | Subtle keystroke tick          |
-| `light`  | Soft tap                      |
-| `medium` | Firm press with bass thump    |
-| `heavy`  | Strong impact, multi-tap buzz |
+| Style    | Feel                  | Best for              |
+|----------|-----------------------|-----------------------|
+| `key`    | Subtle tick           | Keyboard input        |
+| `light`  | Soft tap              | List items, stories   |
+| `medium` | Firm press            | Buttons, navigation   |
+| `heavy`  | Strong thump          | Delete, send, confirm |
 
-## How it works
+## Important notes
 
-On iOS, `navigator.vibrate()` doesn't exist. The library uses a Safari-specific trick: toggling a hidden `<input type="checkbox" switch>` fires the Taptic Engine. For heavier styles, it rapid-fires multiple toggles across separate checkboxes.
-
-On all devices, a sub-bass sine wave (30–150 Hz) plays through the speaker, physically vibrating the device chassis. This is tuned per style — `heavy` uses 30 Hz with high gain for a deep thump you can actually feel.
+- **iOS requires sound on** (ringer switch unmuted) for Taptic Engine to fire
+- Works best with a **bundler** (Vite, webpack, etc.) — direct CDN/ESM imports may break the iOS user gesture chain
+- The audio click needs a user interaction to start (browser autoplay policy)
 
 ## License
 
