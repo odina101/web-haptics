@@ -1,5 +1,5 @@
 {
-  "name": "web-haptics",
+  "name": "@rowixorg/web-haptics",
   "version": "1.0.0",
   "description": "Real haptic feedback for mobile web — iOS Taptic Engine + Android vibrate + sub-bass audio",
   "type": "module",
