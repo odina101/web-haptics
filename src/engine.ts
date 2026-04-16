@@ -97,22 +97,25 @@ class HapticEngine {
 
 		const container = document.createElement('div');
 		container.setAttribute('aria-hidden', 'true');
+		// Position far offscreen — NOT at top:0/left:0 which can intercept
+		// touch events on iOS even with pointer-events:none
 		container.style.cssText =
-			'position:fixed;top:0;left:0;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);pointer-events:none;z-index:-1';
+			'position:fixed;bottom:-200px;left:-200px;width:1px;height:1px;overflow:hidden;pointer-events:none;z-index:-9999';
 
 		for (let i = 0; i < 3; i++) {
 			const id = `${this.idPrefix}-${i}`;
 			const label = document.createElement('label');
 			label.setAttribute('for', id);
-			label.style.cssText = 'display:block;width:0;height:0;overflow:hidden';
+			label.style.cssText = 'position:absolute;overflow:hidden';
 
 			const input = document.createElement('input');
 			input.type = 'checkbox';
 			input.setAttribute('switch', '');
 			input.id = id;
-			// Render the input but make it invisible — NOT display:none
+			// Must be rendered (not display:none) for Safari Taptic Engine.
+			// Keep offscreen and non-interactive.
 			input.style.cssText =
-				'position:absolute;opacity:0;width:1px;height:1px;overflow:hidden;appearance:auto;-webkit-appearance:none';
+				'position:absolute;opacity:0.01;width:1px;height:1px;pointer-events:none;-webkit-appearance:none';
 
 			label.appendChild(input);
 			container.appendChild(label);
