@@ -1,1 +1,1 @@
-export { haptic, type HapticStyle } from './engine';
+export { haptic, type HapticStyle } from './engine.js';

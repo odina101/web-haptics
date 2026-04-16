@@ -1,6 +1,6 @@
-import { haptic, type HapticStyle } from './engine';
+import { haptic, type HapticStyle } from './engine.js';
 
-export { haptic, type HapticStyle } from './engine';
+export { haptic, type HapticStyle } from './engine.js';
 
 type Action<E extends HTMLElement, P> = (node: E, parameter: P) => {
 	update?: (parameter: P) => void;
